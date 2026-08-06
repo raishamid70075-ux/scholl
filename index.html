@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelas XII IPA 1 — Mading Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@500;600;700&family=Patrick+Hand&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="auth.css">
+<style>
+  /* =========================================================
+     TOKENS — bahan-bahan mading: kertas, karton gabus, spidol,
+     tinta pena, stabilo, sticky note.
+  ========================================================= */
+  :root {
+    --paper: #EFE6D2;
+    --paper-white: #FBF7ED;
+    --paper-line: #C9D3E0;
+    --ink: #1C2541;
+    --ink-soft: #5B6580;
+    --cork: #B9825A;
+    --cork-dark: #8C5F3B;
+    --highlighter: #FFD93D;
+    --sticky-pink: #FF7FA0;
+    --chalk-green: #2F6B52;
+    --pen-red: #D6472F;
+    --shadow-card: 0 2px 0 rgba(28,37,65,.12), 0 10px 18px -8px rgba(28,37,65,.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* paper grain, subtle — not a glow blob */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: .05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 5; }
+  section, header.hero { scroll-margin-top: 84px; }
+
+  img, svg { display: block; max-width: 100%; }
+
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--pen-red);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  /* =========================================================
+     NAV — deretan tab map warna, bukan navbar kaca.
+  ========================================================= */
+  nav {
+    position: sticky;
+    top: 0;
+    background: var(--paper-white);
+    border-bottom: 3px solid var(--ink);
+    z-index: 100;
+    transition: all 0.3s ease;
+  }
+  nav .wrap { 
+    height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; 
+    transition: height 0.3s ease;
+  }
+
+  nav.scrolled .wrap { height: 52px; }
+  nav.scrolled .stamp-logo { width: 44px; height: 44px; font-size: 7.5px; }
+
+  .stamp-logo {
+    flex-shrink: 0;
+    width: 56px; height: 56px;
+    border: 2px dashed var(--pen-red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    transform: rotate(-8deg);
+    font-family: 'Patrick Hand', cursive;
+    font-size: 9px;
+    letter-spacing: 0.03em;
+    color: var(--pen-red);
+    line-height: 1.25;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+  .stamp-logo:hover { transform: rotate(4deg) scale(1.06); }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a {
+    display: block;
+    position: relative;
+    text-decoration: none;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--ink);
+    padding: 8px 12px;
+    border-bottom: 4px solid transparent;
+    transition: border-color .15s ease, background .15s ease, transform .2s ease;
+  }
+  .nav-links a:hover, .nav-links a:focus-visible { transform: translateY(-1px); }
+  .nav-links li:nth-child(5n+1) a:hover, .nav-links li:nth-child(5n+1) a:focus-visible { border-color: var(--highlighter); }
+  .nav-links li:nth-child(5n+2) a:hover, .nav-links li:nth-child(5n+2) a:focus-visible { border-color: var(--sticky-pink); }
+  .nav-links li:nth-child(5n+3) a:hover, .nav-links li:nth-child(5n+3) a:focus-visible { border-color: var(--chalk-green); }
+  .nav-links li:nth-child(5n+4) a:hover, .nav-links li:nth-child(5n+4) a:focus-visible { border-color: var(--pen-red); }
+  .nav-links li:nth-child(5n+5) a:hover, .nav-links li:nth-child(5n+5) a:focus-visible { border-color: var(--cork); }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: none; border: none; cursor: pointer; padding: 8px;
+  }
+  .menu-toggle span { width: 22px; height: 2px; background: var(--ink); display: block; }
+
+  @media (min-width: 761px) and (max-width: 1000px) {
+    nav .wrap { gap: 8px; }
+    .nav-links { gap: 1px; }
+    .nav-links a { font-size: 10px; padding: 6px 9px; }
+    .stamp-logo { width: 48px; height: 48px; font-size: 7.5px; }
+  }
+
+  @media (max-width: 760px) {
+    .menu-toggle { display: flex; }
+    .nav-links {
+      position: absolute; top: 68px; left: 0; width: 100%;
+      background: var(--paper-white);
+      border-bottom: 3px solid var(--ink);
+      flex-direction: column;
+      max-height: 0; overflow: hidden;
+      transition: max-height .3s ease, top 0.3s ease;
+    }
+    nav.scrolled .nav-links {
+      top: 52px;
+    }
+    .nav-links.active { max-height: 600px; overflow-y: auto; }
+    .nav-links li { width: 100%; }
+    .nav-links a { padding: 14px 24px; border-bottom: 1px solid var(--paper-line); }
+  }
+
+  /* =========================================================
+     SECTION TAB — label kertas robek, bukan angka 01/02/03.
+  ========================================================= */
+  .section { padding: 72px 0; border-bottom: 3px dashed var(--paper-line); }
+  .section-tab {
+    display: inline-block;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 14px;
+    transform: rotate(-1.5deg);
+  }
+  .section:nth-of-type(4n+1) .section-tab { background: var(--highlighter); }
+  .section:nth-of-type(4n+2) .section-tab { background: var(--sticky-pink); color: var(--paper-white); }
+  .section:nth-of-type(4n+3) .section-tab { background: var(--chalk-green); color: var(--paper-white); }
+  .section:nth-of-type(4n+4) .section-tab { background: var(--paper-white); border: 2px solid var(--ink); }
+  .section-tab { transition: transform .25s ease; }
+  .section-tab:hover { animation: wiggle .45s ease; }
+  @keyframes wiggle { 0%, 100% { transform: rotate(-1.5deg); } 30% { transform: rotate(2.5deg); } 70% { transform: rotate(-3deg); } }
+
+  h2.section-title {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: clamp(26px, 4vw, 38px);
+    letter-spacing: -0.01em;
+  }
+  .section-sub { font-size: 13px; color: var(--ink-soft); margin-top: 8px; max-width: 480px; }
+
+  /* =========================================================
+     1. HERO — papan gabus (mading).
+  ========================================================= */
+  header.hero {
+    background-color: var(--cork);
+    background-image:
+      radial-gradient(circle at 15% 25%, rgba(0,0,0,.12) 0, transparent 3px),
+      radial-gradient(circle at 65% 60%, rgba(0,0,0,.1) 0, transparent 3px),
+      radial-gradient(circle at 85% 20%, rgba(0,0,0,.1) 0, transparent 3px),
+      radial-gradient(circle at 35% 80%, rgba(0,0,0,.1) 0, transparent 3px),
+      radial-gradient(circle at 50% 45%, rgba(0,0,0,.08) 0, transparent 3px);
+    background-size: 90px 90px;
+    padding: 72px 0 0;
+    position: relative;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--highlighter);
+    color: var(--ink);
+    font-family: 'Patrick Hand', cursive;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 7px 14px;
+    transform: rotate(-2deg);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 28px;
+  }
+  .hero-title {
+    font-family: 'Archivo Black', sans-serif;
+    text-transform: uppercase;
+    color: var(--paper-white);
+    font-size: clamp(46px, 9vw, 92px);
+    line-height: .92;
+    letter-spacing: -0.01em;
+  }
+  .hero-title .accent {
+    display: inline-block;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    text-transform: none;
+    color: var(--highlighter);
+    font-size: 1.25em;
+    transform: rotate(-4deg);
+    margin-left: 10px;
+  }
+
+  .hero-tag, .hero-title, .id-tag { animation: rise .7s cubic-bezier(.2,.7,.3,1) both; }
+  .hero-tag { animation-delay: .05s; }
+  .hero-title { animation-delay: .15s; }
+  .id-tag { animation-delay: .3s; }
+  @keyframes rise { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
+
+  .id-tag {
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    padding: 22px 24px 20px;
+    max-width: 460px;
+    position: relative;
+    margin: 40px 0 56px;
+    transform: rotate(1.2deg);
+  }
+  .id-tag::before {
+    content: "";
+    position: absolute;
+    top: -13px; left: 50%; transform: translateX(-50%);
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--cork);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.35);
+  }
+  .id-tag-row { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px dashed var(--paper-line); font-size: 13px; }
+  .id-tag-row:last-child { border-bottom: none; }
+  .id-tag-label { font-family: 'Patrick Hand', cursive; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft); }
+  .id-tag-val { font-weight: 600; text-align: right; }
+
+  .torn-divider {
+    height: 34px;
+    background: var(--paper);
+    clip-path: polygon(0% 100%,0% 30%,3% 70%,6% 20%,9% 70%,12% 20%,15% 70%,18% 20%,21% 70%,24% 20%,27% 70%,30% 20%,33% 70%,36% 20%,39% 70%,42% 20%,45% 70%,48% 20%,51% 70%,54% 20%,57% 70%,60% 20%,63% 70%,66% 20%,69% 70%,72% 20%,75% 70%,78% 20%,81% 70%,84% 20%,87% 70%,90% 20%,93% 70%,96% 20%,100% 70%,100% 100%);
+  }
+
+  .story-card {
+    background:
+      repeating-linear-gradient(var(--paper-white), var(--paper-white) 27px, var(--paper-line) 28px);
+    box-shadow: var(--shadow-card);
+    padding: 32px 28px;
+    max-width: 700px;
+    margin-top: 40px;
+    position: relative;
+    transform: rotate(-.6deg);
+  }
+  .story-card p { color: var(--ink-soft); line-height: 1.85; font-size: 15px; max-width: 620px; }
+  .story-motto {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    color: var(--pen-red);
+    font-size: 30px;
+    margin-top: 18px;
+    display: inline-block;
+    transform: rotate(-2deg);
+    border-bottom: 2px solid var(--pen-red);
+    padding-bottom: 2px;
+  }
+
+  /* =========================================================
+     2. STRUKTUR — id-tag kecil untuk pengurus + sticky notes.
+  ========================================================= */
+  .id-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 22px;
+    margin-bottom: 44px;
+  }
+  .id-card-mini {
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    padding: 18px 18px 16px;
+  }
+  .id-grid > div:nth-child(4n+1) { transform: rotate(-1.4deg); }
+  .id-grid > div:nth-child(4n+2) { transform: rotate(1deg); }
+  .id-grid > div:nth-child(4n+3) { transform: rotate(-.6deg); }
+  .id-grid > div:nth-child(4n+4) { transform: rotate(1.6deg); }
+  .id-role {
+    display: inline-block;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--paper-white);
+    background: var(--chalk-green);
+    padding: 3px 9px;
+    margin-bottom: 10px;
+  }
+  .id-name { font-weight: 700; font-size: 17px; }
+
+  .note-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; }
+  .note {
+    padding: 16px 16px 20px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+  }
+  .note::after {
+    content: ""; position: absolute; bottom: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 0 16px 16px;
+    border-color: transparent transparent rgba(0,0,0,.15) transparent;
+  }
+  .note-grid > div:nth-child(4n+1) { background: var(--highlighter); transform: rotate(-1.5deg); }
+  .note-grid > div:nth-child(4n+2) { background: var(--sticky-pink); color: var(--paper-white); transform: rotate(1.2deg); }
+  .note-grid > div:nth-child(4n+3) { background: var(--paper-white); transform: rotate(-.8deg); }
+  .note-grid > div:nth-child(4n+4) { background: #cfe3d8; transform: rotate(1.6deg); }
+  .note-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+  .note-body { font-size: 13px; line-height: 1.5; }
+
+  /* =========================================================
+     3. WALI KELAS — kartu laminating + lanyard.
+  ========================================================= */
+  .teacher-card {
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    padding: 34px;
+    display: flex; gap: 30px; align-items: center;
+    position: relative;
+    transform: rotate(-.4deg);
+    max-width: 760px;
+  }
+  .teacher-card::before {
+    content: "";
+    position: absolute; top: -16px; left: 44px;
+    width: 40px; height: 16px;
+    background: var(--ink);
+    border-radius: 4px 4px 0 0;
+  }
+  .teacher-photo {
+    width: 120px; height: 120px; flex-shrink: 0;
+    background: var(--paper);
+    border: 3px solid var(--paper-white);
+    outline: 2px solid var(--ink-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Patrick Hand', cursive; font-size: 11px; color: var(--ink-soft); text-align: center;
+  }
+  .teacher-name { font-weight: 800; font-size: 21px; }
+  .teacher-mapel {
+    display: inline-block; margin: 6px 0 14px;
+    font-family: 'Patrick Hand', cursive; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--paper-white); background: var(--pen-red); padding: 3px 9px;
+  }
+  .teacher-quote { font-family: 'Caveat', cursive; font-weight: 600; font-size: 21px; color: var(--ink); line-height: 1.4; }
+  @media (max-width: 620px) { .teacher-card { flex-direction: column; text-align: center; } .teacher-card::before { left: 50%; margin-left: -20px; } }
+
+  /* =========================================================
+     4. PROFIL SISWA — kartu pelajar geser.
+  ========================================================= */
+  .carousel-track {
+    display: flex; gap: 22px; overflow-x: auto; padding: 8px 8px 26px;
+    scroll-snap-type: x mandatory;
+  }
+  .carousel-track::-webkit-scrollbar { height: 6px; }
+  .carousel-track::-webkit-scrollbar-thumb { background: var(--ink-soft); border-radius: 10px; }
+
+  .id-card {
+    flex: 0 0 auto; width: 260px;
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    scroll-snap-align: start;
+    position: relative;
+    padding-top: 8px;
+  }
+  .carousel-track > .id-card:nth-child(odd) { transform: rotate(-1.3deg); }
+  .carousel-track > .id-card:nth-child(even) { transform: rotate(1.1deg); }
+
+  .id-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 16px; background: var(--ink); color: var(--paper-white);
+    font-family: 'Patrick Hand', cursive; font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .id-photo {
+    margin: 16px auto; width: 140px; height: 186px;
+    background: var(--paper);
+    border: 2px dashed var(--ink-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Archivo Black', sans-serif; font-size: 26px; color: var(--ink-soft);
+    position: relative;
+  }
+  .id-photo::before, .id-photo::after {
+    content: ""; position: absolute; top: -8px; width: 34px; height: 14px;
+    background: rgba(255,255,255,.55); border: 1px solid rgba(0,0,0,.06);
+  }
+  .id-photo::before { left: 8px; transform: rotate(-6deg); }
+  .id-photo::after { right: 8px; transform: rotate(6deg); }
+
+  .id-card-body { padding: 0 16px; }
+  .id-card-name { font-size: 16px; font-weight: 700; }
+  .id-card-nickname { font-family: 'Caveat', cursive; font-weight: 700; font-size: 18px; color: var(--pen-red); margin-bottom: 10px; }
+
+  .id-card-details {
+    font-size: 12px; color: var(--ink-soft);
+    display: grid; grid-template-columns: 74px 1fr; gap: 7px; line-height: 1.4;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: all .35s ease;
+  }
+  .id-card.active .id-card-details {
+    max-height: 220px; opacity: 1; margin: 10px 0; padding-top: 10px; border-top: 1px dashed var(--paper-line);
+  }
+  .id-card-details span { color: var(--ink); font-weight: 500; }
+
+  .barcode {
+    height: 22px; margin: 14px 16px 0;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px);
+    opacity: .8;
+  }
+  .id-card-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px 16px; cursor: pointer;
+  }
+  .id-card-role { font-family: 'Patrick Hand', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--chalk-green); font-weight: 700; }
+  .id-card-arrow { color: var(--pen-red); font-size: 14px; transition: transform .3s; }
+  .id-card.active .id-card-arrow { transform: rotate(180deg); }
+
+  /* =========================================================
+     5/6. JADWAL — papan jadwal tempel + checklist piket.
+  ========================================================= */
+  h3.sub-heading {
+    font-family: 'Patrick Hand', cursive; font-size: 15px; text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: 18px; color: var(--chalk-green);
+    display: inline-block;
+    border-bottom: 3px solid var(--chalk-green);
+    padding-bottom: 3px;
+  }
+
+  .schedule-paper {
+    position: relative;
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    padding: 30px 22px 20px;
+    transform: rotate(-.3deg);
+    border-top: 6px solid var(--chalk-green);
+    margin-bottom: 44px;
+  }
+  .washi-tape {
+    position: absolute; top: -15px; left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    width: 150px; height: 28px;
+    background: rgba(255,217,61,.6);
+    border-left: 2px dashed rgba(28,37,65,.3);
+    border-right: 2px dashed rgba(28,37,65,.3);
+  }
+  .staple { position: absolute; top: 10px; left: 10px; width: 20px; height: 8px; background: #9aa1ab; border-radius: 2px; transform: rotate(-40deg); box-shadow: 0 0 0 1px rgba(0,0,0,.1); }
+  .schedule-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .schedule-title { font-family: 'Archivo Black', sans-serif; font-size: 19px; text-transform: uppercase; letter-spacing: -0.01em; }
+  .schedule-sub { font-family: 'Patrick Hand', cursive; font-size: 14px; color: var(--ink-soft); }
+
+  .table-responsive { overflow-x: auto; }
+  table.schedule-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 13.5px; font-family: 'Work Sans', sans-serif; }
+  table.schedule-table th, table.schedule-table td { padding: 13px 14px; border-bottom: 2px dashed var(--paper-line); vertical-align: middle; }
+  table.schedule-table thead th {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 14px; letter-spacing: .05em; text-transform: uppercase; font-weight: 700;
+    color: var(--ink); background: var(--highlighter);
+    border-bottom: 3px solid var(--ink);
+    white-space: nowrap;
+  }
+  table.schedule-table thead th:first-child { border-radius: 8px 0 0 0; }
+  table.schedule-table tbody tr:last-child td { border-bottom: none; }
+  table.schedule-table tbody tr:nth-child(even) td { background: rgba(28,37,65,.035); }
+  table.schedule-table td:first-child { width: 92px; }
+  table.schedule-table td { color: var(--ink); min-width: 150px; }
+
+  .day-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 78px; padding: 7px 12px; border-radius: 6px;
+    font-family: 'Patrick Hand', cursive; font-size: 15px; font-weight: 700; letter-spacing: .03em;
+    color: var(--ink); box-shadow: var(--shadow-card);
+    transform: rotate(-1.2deg);
+  }
+  .day-senin .day-badge { background: var(--highlighter); }
+  .day-selasa .day-badge { background: var(--sticky-pink); color: var(--paper-white); }
+  .day-rabu .day-badge { background: var(--chalk-green); color: var(--paper-white); }
+  .day-kamis .day-badge { background: #aecdf5; }
+  .day-jumat .day-badge { background: #c9b7ec; }
+
+  .chip {
+    display: inline-block; padding: 5px 11px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 600; line-height: 1.3; white-space: nowrap;
+    color: var(--ink); margin: 2px 0;
+  }
+  .chip + .chip { margin-left: 6px; }
+  .chip-upacara { background: #f3e2b8; }
+  .chip-biologi { background: #cfe3d8; }
+  .chip-mtk { background: #cfe0f7; }
+  .chip-fisika { background: #f7d9c4; }
+  .chip-kimia { background: #e2d7f0; }
+  .chip-bindo { background: #f6c6c0; }
+  .chip-bing { background: #c5e8e4; }
+  .chip-agama { background: #fcefc1; }
+  .chip-sejarah { background: #e8d5b8; }
+  .chip-olahraga { background: #d6ecd0; }
+  .chip-seni { background: #f9cddb; }
+  .chip-ppkn { background: #d5d3ef; }
+  .chip-bk { background: #e6dff2; }
+  .chip-rest { background: #e9e4d6; }
+
+  .subject-legend {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-top: 18px; padding-top: 14px; border-top: 2px dashed var(--paper-line);
+  }
+  .legend-label { font-family: 'Patrick Hand', cursive; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin-right: 2px; }
+
+  .piket-note {
+    font-family: 'Caveat', cursive; font-weight: 600; font-size: 18px; color: var(--ink-soft);
+    margin: 10px 0 26px; transform: rotate(-.5deg); display: inline-block;
+  }
+
+  .piket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+  .piket-card {
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    padding: 18px 16px 14px;
+    overflow: hidden;
+  }
+  .piket-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 8px;
+  }
+  .piket-grid > div:nth-child(odd) { transform: rotate(-.8deg); }
+  .piket-grid > div:nth-child(even) { transform: rotate(.7deg); }
+  .piket-senin::before { background: var(--highlighter); }
+  .piket-selasa::before { background: var(--sticky-pink); }
+  .piket-rabu::before { background: var(--chalk-green); }
+  .piket-kamis::before { background: #7fb3e8; }
+  .piket-jumat::before { background: #9d82d9; }
+  .piket-day {
+    font-family: 'Patrick Hand', cursive; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .piket-stamp {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--ink); flex-shrink: 0;
+  }
+  .piket-senin .piket-stamp { background: #d6a800; }
+  .piket-selasa .piket-stamp { background: #e85d82; }
+  .piket-rabu .piket-stamp { background: var(--chalk-green); }
+  .piket-kamis .piket-stamp { background: #2b7bd6; }
+  .piket-jumat .piket-stamp { background: #6d4fc4; }
+  .piket-list { list-style: none; }
+  .piket-list li {
+    position: relative; padding-left: 22px;
+    font-size: 13px; font-weight: 600; line-height: 2; color: var(--ink);
+  }
+  .piket-list li::before {
+    content: ""; position: absolute; left: 2px; top: 8px;
+    width: 11px; height: 11px; border-radius: 3px;
+    border: 2px solid currentColor; background: rgba(255,255,255,.35);
+  }
+
+  /* =========================================================
+     7. DENAH — papan tulis hijau sungguhan.
+  ========================================================= */
+  .denah-container { background: var(--paper-white); box-shadow: var(--shadow-card); padding: 28px; }
+  .board-teacher {
+    background: var(--chalk-green);
+    border: 3px solid #1c4433;
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(255,255,255,.85);
+  }
+  .seating-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .seat {
+    background: var(--paper);
+    border-left: 3px solid var(--pen-red);
+    padding: 12px 10px;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 11.5px; color: var(--ink);
+  }
+  @media (max-width: 640px) { .seating-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* =========================================================
+     8/9. DOKUMENTASI & PRESTASI — polaroid & medali.
+  ========================================================= */
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 26px; }
+  .polaroid { background: var(--paper-white); box-shadow: var(--shadow-card); padding: 12px 12px 20px; position: relative; }
+  .doc-grid > .polaroid:nth-child(3n+1) { transform: rotate(-2deg); }
+  .doc-grid > .polaroid:nth-child(3n+2) { transform: rotate(1.6deg); }
+  .doc-grid > .polaroid:nth-child(3n+3) { transform: rotate(-.8deg); }
+  .polaroid::before {
+    content: ""; position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-3deg);
+    width: 60px; height: 18px; background: rgba(255,255,255,.6); border: 1px solid rgba(0,0,0,.05);
+  }
+  .doc-img {
+    width: 100%; height: 150px;
+    background: repeating-linear-gradient(135deg, #d7cba9 0 10px, #c9bc95 10px 20px);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Patrick Hand', cursive; font-size: 11px; color: var(--ink-soft);
+  }
+  .doc-tag {
+    display: inline-block; margin: 12px 0 6px;
+    font-family: 'Patrick Hand', cursive; font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+    background: var(--ink); color: var(--paper-white); padding: 2px 8px;
+  }
+  .doc-title { font-family: 'Caveat', cursive; font-weight: 700; font-size: 21px; margin-bottom: 4px; }
+  .doc-desc { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+
+  .medal-row { display: flex; flex-direction: column; gap: 16px; max-width: 620px; }
+  .medal { display: flex; align-items: center; gap: 18px; background: var(--paper-white); box-shadow: var(--shadow-card); padding: 16px 20px; }
+  .medal-seal {
+    flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Patrick Hand', cursive; font-weight: 700; font-size: 13px; color: var(--paper-white);
+  }
+  .medal:nth-child(1) .medal-seal { background: var(--highlighter); color: var(--ink); }
+  .medal:nth-child(2) .medal-seal { background: var(--ink-soft); }
+  .medal:nth-child(3) .medal-seal { background: #a1662f; }
+  .medal-title { font-weight: 700; font-size: 14.5px; }
+  .medal-sub { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+
+  /* =========================================================
+     10. KOMENTAR — dinding sticky note.
+  ========================================================= */
+  .comment-form {
+    background: var(--highlighter);
+    box-shadow: var(--shadow-card);
+    padding: 22px;
+    max-width: 380px;
+    display: flex; flex-direction: column; gap: 12px;
+    margin-bottom: 40px;
+    transform: rotate(-1deg);
+  }
+  .comment-form input, .comment-form textarea {
+    background: rgba(255,255,255,.6);
+    border: none; border-bottom: 2px dashed var(--ink);
+    padding: 10px 4px; font-family: 'Work Sans', sans-serif; font-size: 13.5px; color: var(--ink); outline: none;
+  }
+  .comment-form input::placeholder, .comment-form textarea::placeholder { color: rgba(28,37,65,.55); }
+  .btn-submit {
+    background: var(--ink); color: var(--paper-white); border: none; padding: 12px;
+    font-family: 'Patrick Hand', cursive; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
+    cursor: pointer; align-self: flex-start; padding: 10px 20px;
+  }
+  .btn-submit:hover { background: var(--pen-red); }
+
+  .comment-list { display: flex; flex-wrap: wrap; gap: 18px; }
+  .sticky-note { width: 210px; padding: 16px; box-shadow: var(--shadow-card); position: relative; }
+  .sticky-note::before {
+    content: ""; position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    width: 13px; height: 13px; border-radius: 50%; background: var(--pen-red); box-shadow: inset 0 2px 2px rgba(0,0,0,.3);
+  }
+  .note-yellow { background: var(--highlighter); }
+  .note-pink { background: var(--sticky-pink); color: var(--paper-white); }
+  .note-green { background: #cfe3d8; }
+  .note-white { background: var(--paper-white); }
+  .comment-author { font-family: 'Patrick Hand', cursive; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-bottom: 6px; }
+  .comment-date { font-size: 10px; opacity: .7; display: block; margin-top: 8px; }
+  .comment-body { font-family: 'Caveat', cursive; font-weight: 600; font-size: 18px; line-height: 1.35; }
+  .empty-note { font-size: 13px; color: var(--ink-soft); }
+
+  /* =========================================================
+     11. CONTACT & FOOTER
+  ========================================================= */
+  .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; }
+  .contact-item { background: var(--paper-white); box-shadow: var(--shadow-card); padding: 18px; display: flex; gap: 12px; align-items: center; }
+  .contact-badge {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--ink); color: var(--paper-white);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Patrick Hand', cursive; font-size: 10px; font-weight: 700;
+  }
+  .contact-label { font-family: 'Patrick Hand', cursive; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); margin-bottom: 2px; }
+  .contact-val { font-size: 14px; font-weight: 600; text-decoration: none; }
+
+  footer { padding: 46px 0 40px; text-align: center; }
+  footer .sign-off { font-family: 'Caveat', cursive; font-weight: 700; font-size: 26px; color: var(--pen-red); transform: rotate(-2deg); display: inline-block; margin-bottom: 10px; }
+  footer .fine-print { font-family: 'Patrick Hand', cursive; font-size: 11px; color: var(--ink-soft); }
+
+  /* gentle reveal-on-scroll — paper settling into place */
+  .reveal { opacity: 0; transform: translateY(14px) rotate(0deg); transition: opacity .5s ease, transform .5s ease; }
+  .reveal.in-view { opacity: 1; transform: none; }
+
+  /* subtle hover micro-interactions — "kertas terangkat" */
+  .id-card-mini, .note, .polaroid, .medal, .contact-item, .piket-card, .teacher-card {
+    transition: box-shadow .3s ease, translate .3s ease;
+  }
+  .id-card-mini:hover, .note:hover, .polaroid:hover, .medal:hover, .contact-item:hover, .piket-card:hover, .teacher-card:hover {
+    translate: 0 -5px;
+    box-shadow: 0 8px 0 rgba(28,37,65,.1), 0 22px 30px -14px rgba(28,37,65,.45);
+  }
+  .chip { transition: transform .2s ease; }
+  .chip:hover { transform: translateY(-2px); }
+  .btn-submit { transition: background .2s ease, transform .1s ease; }
+  .btn-submit:active { transform: translateY(2px); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="stamp-logo">SMA<br>XII·IPA1</div>
+    <button class="menu-toggle" id="mobile-menu" aria-label="Buka menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#cerita">Cerita</a></li>
+      <li><a href="#struktur">Struktur</a></li>
+      <li><a href="#walikelas">Wali Kelas</a></li>
+      <li><a href="#profil">Siswa</a></li>
+      <li><a href="#jadwal">Jadwal</a></li>
+      <li><a href="#denah">Denah</a></li>
+      <li><a href="#dokumentasi">Dokumentasi</a></li>
+      <li><a href="#prestasi">Prestasi</a></li>
+      <li><a href="#komentar">Komentar</a></li>
+      <li><a href="#contact">Kontak</a></li>
+      <li id="nav-auth-item"><a href="#" id="nav-auth-btn">🔑 Login</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- 1. HERO -->
+<header class="hero" id="cerita">
+  <div class="wrap">
+    <div class="hero-tag">Tahun Ajaran 2025/2026</div>
+    <h1 class="hero-title">Kelas XII<span class="accent">IPA 1</span></h1>
+
+    <div class="id-tag">
+      <div class="id-tag-row"><span class="id-tag-label">Wali Kelas</span><span class="id-tag-val">Bapak/Ibu [Nama Wali Kelas]</span></div>
+      <div class="id-tag-row"><span class="id-tag-label">Jumlah Siswa</span><span class="id-tag-val">32 Orang</span></div>
+      <div class="id-tag-row"><span class="id-tag-label">Sekolah</span><span class="id-tag-val">[Nama Sekolah Kamu]</span></div>
+    </div>
+  </div>
+  <div class="torn-divider"></div>
+</header>
+
+<section class="section" style="border-top:none; padding-top:0;">
+  <div class="wrap">
+    <div class="story-card reveal">
+      <p>Terbentuk dari 32 kepala dengan isi yang berbeda-beda, disatukan dalam satu ruang kelas sejak Juli 2023. Melewati masa adaptasi, tugas menumpuk, hingga drama class meeting yang justru mempererat solidaritas kami.</p>
+      <span class="story-motto">"Bertumbuh bersama, pulang membawa kebanggaan."</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2. STRUKTUR KELAS -->
+<section class="section" id="struktur">
+  <div class="wrap">
+    <div class="section-tab">Kepengurusan</div>
+    <h2 class="section-title">Struktur Kelas</h2>
+
+    <div class="id-grid" style="margin-top:32px;">
+      <div class="id-card-mini reveal"><div class="id-role">Ketua Kelas</div><div class="id-name">Ahmad Rizki</div></div>
+      <div class="id-card-mini reveal"><div class="id-role">Wakil Ketua</div><div class="id-name">Siti Nuraini</div></div>
+      <div class="id-card-mini reveal"><div class="id-role">Sekretaris</div><div class="id-name">Dewi Kartika & Budi P.</div></div>
+      <div class="id-card-mini reveal"><div class="id-role">Bendahara</div><div class="id-name">Rina Marlina & Agus S.</div></div>
+    </div>
+
+    <div class="note-grid">
+      <div class="note reveal"><div class="note-title">Seksi Kebersihan</div><div class="note-body">Andi, Bima, Citra</div></div>
+      <div class="note reveal"><div class="note-title">Seksi Keamanan</div><div class="note-body">Deni, Farhan, Gilang</div></div>
+      <div class="note reveal"><div class="note-title">Seksi Dokumentasi</div><div class="note-body">Eka, Hana</div></div>
+      <div class="note reveal"><div class="note-title">Seksi Kerohanian</div><div class="note-body">Ilham, Julia</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. WALI KELAS -->
+<section class="section" id="walikelas">
+  <div class="wrap">
+    <div class="section-tab">Pembimbing Kami</div>
+    <h2 class="section-title">Wali Kelas</h2>
+
+    <div class="teacher-card reveal" style="margin-top:32px;">
+      <div class="teacher-photo">FOTO<br>GURU</div>
+      <div>
+        <div class="teacher-name">Bpk./Ibu. [Nama Wali Kelas], M.Pd.</div>
+        <div class="teacher-mapel">Pengampu Mapel: Fisika</div>
+        <div class="teacher-quote">"Keberhasilan bukan hanya tentang angka di rapor, melainkan seberapa pantang menyerah kalian menghadapi proses."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. PROFIL SISWA -->
+<section class="section" id="profil">
+  <div class="wrap">
+    <div class="section-tab">Kartu Pelajar</div>
+    <h2 class="section-title">Profil Siswa</h2>
+    <div class="section-sub">Geser ke kanan, lalu ketuk panah di tiap kartu untuk lihat biodata lengkap.</div>
+
+    <div class="carousel-track" style="margin-top:28px;">
+      <div class="id-card">
+        <div class="id-card-header"><span>Kartu Pelajar</span><span>No. 01</span></div>
+        <div class="id-photo">AR</div>
+        <div class="id-card-body">
+          <div class="id-card-name">Ahmad Rizki</div>
+          <div class="id-card-nickname">"Rizki"</div>
+          <div class="id-card-details">
+            <div>TTL</div><span>12 Mei 2007</span>
+            <div>Cita-cita</div><span>Software Engineer</span>
+            <div>Hobi</div><span>Coding & Futsal</span>
+            <div>Mapel Fav</div><span>Matematika</span>
+            <div>Eskul</div><span>Pramuka, IT Club</span>
+          </div>
+        </div>
+        <div class="barcode"></div>
+        <div class="id-card-bottom" onclick="toggleDetails(this)">
+          <div class="id-card-role">Ketua Kelas</div>
+          <div class="id-card-arrow">▾</div>
+        </div>
+      </div>
+
+      <div class="id-card">
+        <div class="id-card-header"><span>Kartu Pelajar</span><span>No. 02</span></div>
+        <div class="id-photo">SN</div>
+        <div class="id-card-body">
+          <div class="id-card-name">Siti Nuraini</div>
+          <div class="id-card-nickname">"Siti"</div>
+          <div class="id-card-details">
+            <div>TTL</div><span>3 Agustus 2007</span>
+            <div>Cita-cita</div><span>Dokter Spesialis</span>
+            <div>Hobi</div><span>Membaca & Melukis</span>
+            <div>Mapel Fav</div><span>Biologi</span>
+            <div>Eskul</div><span>PMR</span>
+          </div>
+        </div>
+        <div class="barcode"></div>
+        <div class="id-card-bottom" onclick="toggleDetails(this)">
+          <div class="id-card-role">Wakil Ketua</div>
+          <div class="id-card-arrow">▾</div>
+        </div>
+      </div>
+
+      <div class="id-card">
+        <div class="id-card-header"><span>Kartu Pelajar</span><span>No. 03</span></div>
+        <div class="id-photo">BP</div>
+        <div class="id-card-body">
+          <div class="id-card-name">Budi Pratama</div>
+          <div class="id-card-nickname">"Budi"</div>
+          <div class="id-card-details">
+            <div>TTL</div><span>10 Januari 2007</span>
+            <div>Cita-cita</div><span>Akuntan</span>
+            <div>Hobi</div><span>Gitar</span>
+            <div>Mapel Fav</div><span>Fisika</span>
+            <div>Eskul</div><span>Basket</span>
+          </div>
+        </div>
+        <div class="barcode"></div>
+        <div class="id-card-bottom" onclick="toggleDetails(this)">
+          <div class="id-card-role">Siswa</div>
+          <div class="id-card-arrow">▾</div>
+        </div>
+      </div>
+
+      <div class="id-card">
+        <div class="id-card-header"><span>Kartu Pelajar</span><span>No. 04</span></div>
+        <div class="id-photo">DK</div>
+        <div class="id-card-body">
+          <div class="id-card-name">Dewi Kartika</div>
+          <div class="id-card-nickname">"Dewi"</div>
+          <div class="id-card-details">
+            <div>TTL</div><span>15 November 2007</span>
+            <div>Cita-cita</div><span>Apoteker</span>
+            <div>Hobi</div><span>Menulis</span>
+            <div>Mapel Fav</div><span>Kimia</span>
+            <div>Eskul</div><span>KIR</span>
+          </div>
+        </div>
+        <div class="barcode"></div>
+        <div class="id-card-bottom" onclick="toggleDetails(this)">
+          <div class="id-card-role">Sekretaris</div>
+          <div class="id-card-arrow">▾</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 & 6. JADWAL -->
+<section class="section" id="jadwal">
+  <div class="wrap">
+    <div class="section-tab">Rutinitas</div>
+    <h2 class="section-title">Jadwal Pelajaran & Piket</h2>
+
+    <div style="margin-top:32px;">
+      <h3 class="sub-heading">Jadwal Mata Pelajaran</h3>
+      <div class="schedule-paper reveal">
+        <div class="staple"></div>
+        <div class="washi-tape"></div>
+        <div class="schedule-head">
+          <span class="schedule-title">XII IPA 1</span>
+          <span class="schedule-sub">Semester Ganjil · TA 2025/2026</span>
+        </div>
+        <div class="table-responsive">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>Hari</th><th>Jam 1-2</th><th>Jam 3-4</th><th>Jam 5-6</th><th>Jam 7-8</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="day-senin">
+                <td><span class="day-badge">Senin</span></td>
+                <td><span class="chip chip-upacara">Upacara</span> <span class="chip chip-biologi">Biologi</span></td>
+                <td><span class="chip chip-mtk">Matematika Wajib</span></td>
+                <td><span class="chip chip-fisika">Fisika</span></td>
+                <td><span class="chip chip-bindo">Bah. Indonesia</span></td>
+              </tr>
+              <tr class="day-selasa">
+                <td><span class="day-badge">Selasa</span></td>
+                <td><span class="chip chip-kimia">Kimia</span></td>
+                <td><span class="chip chip-bing">Bahasa Inggris</span></td>
+                <td><span class="chip chip-agama">Pend. Agama</span></td>
+                <td><span class="chip chip-sejarah">Sejarah</span></td>
+              </tr>
+              <tr class="day-rabu">
+                <td><span class="day-badge">Rabu</span></td>
+                <td><span class="chip chip-mtk">Matematika Minat</span></td>
+                <td><span class="chip chip-fisika">Fisika</span></td>
+                <td><span class="chip chip-olahraga">Olahraga</span></td>
+                <td><span class="chip chip-seni">Seni Budaya</span></td>
+              </tr>
+              <tr class="day-kamis">
+                <td><span class="day-badge">Kamis</span></td>
+                <td><span class="chip chip-biologi">Biologi</span></td>
+                <td><span class="chip chip-kimia">Kimia</span></td>
+                <td><span class="chip chip-ppkn">PPKn</span></td>
+                <td><span class="chip chip-bk">BK</span> <span class="chip chip-bk">Prakarya</span></td>
+              </tr>
+              <tr class="day-jumat">
+                <td><span class="day-badge">Jumat</span></td>
+                <td><span class="chip chip-upacara">Jumat Bersih</span> <span class="chip chip-agama">Agama</span></td>
+                <td><span class="chip chip-bindo">Bahasa Indonesia</span></td>
+                <td><span class="chip chip-mtk">Matematika Wajib</span></td>
+                <td><span class="chip chip-rest">Istirahat</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="subject-legend">
+          <span class="legend-label">Legenda Mapel</span>
+          <span class="chip chip-mtk">Matematika</span>
+          <span class="chip chip-fisika">Fisika</span>
+          <span class="chip chip-kimia">Kimia</span>
+          <span class="chip chip-biologi">Biologi</span>
+          <span class="chip chip-bindo">Bahasa Indonesia</span>
+          <span class="chip chip-bing">Bahasa Inggris</span>
+          <span class="chip chip-agama">Agama</span>
+          <span class="chip chip-seni">Seni</span>
+          <span class="chip chip-olahraga">Olahraga</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-heading">Jadwal Piket Kebersihan</h3>
+    <div class="piket-grid">
+      <div class="piket-card piket-senin">
+        <div class="piket-day">Senin<span class="piket-stamp"></span></div>
+        <ul class="piket-list"><li>Ahmad R.</li><li>Siti N.</li><li>Budi P.</li><li>Dewi K.</li></ul>
+      </div>
+      <div class="piket-card piket-selasa">
+        <div class="piket-day">Selasa<span class="piket-stamp"></span></div>
+        <ul class="piket-list"><li>Andi S.</li><li>Bima K.</li><li>Citra A.</li><li>Deni M.</li></ul>
+      </div>
+      <div class="piket-card piket-rabu">
+        <div class="piket-day">Rabu<span class="piket-stamp"></span></div>
+        <ul class="piket-list"><li>Eka P.</li><li>Farhan H.</li><li>Gilang R.</li><li>Hana S.</li></ul>
+      </div>
+      <div class="piket-card piket-kamis">
+        <div class="piket-day">Kamis<span class="piket-stamp"></span></div>
+        <ul class="piket-list"><li>Ilham Z.</li><li>Julia T.</li><li>Kiki A.</li><li>Lina M.</li></ul>
+      </div>
+      <div class="piket-card piket-jumat">
+        <div class="piket-day">Jumat<span class="piket-stamp"></span></div>
+        <ul class="piket-list"><li>Maman S.</li><li>Nadia P.</li><li>Oki V.</li><li>Putri K.</li></ul>
+      </div>
+    </div>
+    <span class="piket-note">Catatan: piket dimulai pukul 06.30, sebelum bel masuk.</span>
+  </div>
+</section>
+
+<!-- 7. DENAH -->
+<section class="section" id="denah">
+  <div class="wrap">
+    <div class="section-tab">Tata Letak</div>
+    <h2 class="section-title">Denah Tempat Duduk</h2>
+
+    <div class="denah-container reveal" style="margin-top:32px;">
+      <div class="board-teacher">Papan Tulis & Meja Guru</div>
+      <div class="seating-grid">
+        <div class="seat">Ahmad & Budi</div><div class="seat">Siti & Dewi</div>
+        <div class="seat">Andi & Bima</div><div class="seat">Citra & Deni</div>
+        <div class="seat">Eka & Farhan</div><div class="seat">Gilang & Hana</div>
+        <div class="seat">Ilham & Julia</div><div class="seat">Kiki & Lina</div>
+        <div class="seat">Maman & Nadia</div><div class="seat">Oki & Putri</div>
+        <div class="seat">Rizal & Tari</div><div class="seat">Utami & Vina</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. DOKUMENTASI -->
+<section class="section" id="dokumentasi">
+  <div class="wrap">
+    <div class="section-tab">Galeri</div>
+    <h2 class="section-title">Dokumentasi Kegiatan</h2>
+
+    <div class="doc-grid" style="margin-top:32px;">
+      <div class="polaroid reveal">
+        <div class="doc-img">Foto Class Meeting</div>
+        <div class="doc-tag">Desember 2024</div>
+        <div class="doc-title">Juara 1 Futsal</div>
+        <div class="doc-desc">Momen kemenangan tim futsal kelas di babak final melawan kelas sebelah.</div>
+      </div>
+      <div class="polaroid reveal">
+        <div class="doc-img">Foto Study Tour</div>
+        <div class="doc-tag">Oktober 2024</div>
+        <div class="doc-title">Kunjungan Industri</div>
+        <div class="doc-desc">Foto bersama seluruh anggota kelas di depan museum sains.</div>
+      </div>
+      <div class="polaroid reveal">
+        <div class="doc-img">Foto Ultah Kelas</div>
+        <div class="doc-tag">Juli 2024</div>
+        <div class="doc-title">Anniv 1 Tahun</div>
+        <div class="doc-desc">Potong tumpeng dan makan bersama memperingati satu tahun kelas terbentuk.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. PRESTASI -->
+<section class="section" id="prestasi">
+  <div class="wrap">
+    <div class="section-tab">Pencapaian</div>
+    <h2 class="section-title">Prestasi Kelas</h2>
+
+    <div class="medal-row" style="margin-top:32px;">
+      <div class="medal reveal"><div class="medal-seal">01</div><div><div class="medal-title">Juara 1 Lomba Kebersihan Kelas</div><div class="medal-sub">Tingkat Sekolah — Agustus 2024</div></div></div>
+      <div class="medal reveal"><div class="medal-seal">02</div><div><div class="medal-title">Juara 2 Lomba Cerpen (Siti N.)</div><div class="medal-sub">Tingkat Kota — November 2024</div></div></div>
+      <div class="medal reveal"><div class="medal-seal">03</div><div><div class="medal-title">Gold Medal Olimpiade Fisika (Budi P.)</div><div class="medal-sub">Tingkat Provinsi — Februari 2025</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. KOMENTAR -->
+<section class="section" id="komentar">
+  <div class="wrap">
+    <div class="section-tab">Pesan & Kesan</div>
+    <h2 class="section-title">Open Komentar</h2>
+
+    <div id="comment-auth-gate" style="margin-top:32px; margin-bottom: 32px;">
+      <div class="note note-yellow" style="display:inline-block; transform: rotate(-1deg);">
+        <div class="note-title">Area Khusus Warga Kelas</div>
+        <div class="note-body">Silakan <strong>Login</strong> atau <strong>Daftar</strong> terlebih dahulu untuk bisa menempelkan komentar di sini.</div>
+        <button id="btn-login-gate" class="btn-submit" style="margin-top: 12px;">Login Sekarang</button>
+      </div>
+    </div>
+
+    <form class="comment-form" id="commentForm" style="margin-top:32px; display: none;">
+      <div style="font-family: 'Patrick Hand', cursive; font-size: 13px; color: var(--ink-soft); margin-bottom: -4px;">
+        Komentar sebagai: <strong id="loggedInUsername" style="color: var(--ink);"></strong>
+      </div>
+      <input type="hidden" id="cName" required>
+      <textarea id="cMsg" rows="3" placeholder="Tulis pesan/kesan kamu..." required></textarea>
+      <button type="submit" class="btn-submit">Tempel di Mading</button>
+    </form>
+
+    <div class="comment-list" id="commentList"></div>
+  </div>
+</section>
+
+<!-- 11. CONTACT -->
+<section class="section" id="contact" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="section-tab">Hubungi Kami</div>
+    <h2 class="section-title">Kontak & Media Sosial</h2>
+
+    <div class="contact-grid" style="margin-top:32px;">
+      <div class="contact-item"><div class="contact-badge">IG</div><div><div class="contact-label">Instagram Kelas</div><a href="#" class="contact-val">@xii.ipa1_official</a></div></div>
+      <div class="contact-item"><div class="contact-badge">WA</div><div><div class="contact-label">Admin / Webmaster</div><a href="#" class="contact-val">wa.me/628123456789</a></div></div>
+      <div class="contact-item"><div class="contact-badge">@</div><div><div class="contact-label">Email Kelas</div><a href="#" class="contact-val">xiiipa1.official@gmail.com</a></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="sign-off">Sampai ketemu di reuni~</div>
+    <div class="fine-print">© 2025/2026 XII IPA 1 — dibuat dengan semangat solidaritas.</div>
+  </div>
+</footer>
+
+<script>
+  // 1. Kartu pelajar: buka/tutup detail
+  function toggleDetails(element) {
+    element.closest('.id-card').classList.toggle('active');
+  }
+
+  // 2. Komentar — disimpan di memori selama sesi (bukan localStorage,
+  //    supaya tetap berjalan aman di dalam tampilan artifact).
+  let comments = [
+    { name: 'Wali Kelas', msg: 'Bangga sama kalian semua, terus kompak sampai lulus ya!', date: '1 Agu 2026' },
+    { name: 'Alumni 2024', msg: 'Enjoy masa-masa kelas 12, cepat banget lho waktunya nanti.', date: '3 Agu 2026' }
+  ];
+
+  const noteColors = ['note-yellow', 'note-pink', 'note-green', 'note-white'];
+  const form = document.getElementById('commentForm');
+  const list = document.getElementById('commentList');
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  function renderComments() {
+    if (comments.length === 0) {
+      list.innerHTML = '<div class="empty-note">Belum ada komentar. Jadi yang pertama nempel!</div>';
+      return;
+    }
+    list.innerHTML = comments.map((c, i) => {
+      const rotation = [-3, 2, -1.5, 3, -2.5][i % 5];
+      const color = noteColors[i % noteColors.length];
+      return `
+        <div class="sticky-note ${color}" style="transform: rotate(${rotation}deg);">
+          <div class="comment-author">${escapeHtml(c.name)}</div>
+          <div class="comment-body">${escapeHtml(c.msg)}</div>
+          <span class="comment-date">${c.date}</span>
+        </div>`;
+    }).join('');
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const msg = document.getElementById('cMsg').value.trim();
+    if (!name || !msg) return;
+
+    comments.unshift({
+      name, msg,
+      date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+    });
+
+    form.reset();
+    renderComments();
+  });
+
+  renderComments();
+
+  // 3. Menu hamburger mobile
+  const mobileMenu = document.getElementById('mobile-menu');
+  const navLinks = document.getElementById('nav-links');
+  mobileMenu.addEventListener('click', () => {
+    const isActive = navLinks.classList.toggle('active');
+    mobileMenu.setAttribute('aria-expanded', isActive);
+  });
+  navLinks.querySelectorAll('a').forEach(item => {
+    item.addEventListener('click', () => navLinks.classList.remove('active'));
+  });
+
+  // 4. Reveal-on-scroll — kertas "menempel" saat masuk layar
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
+  }
+
+  // 5. Efek Navbar mengecil saat di-scroll
+  const navbar = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  });
+
+</script>
+
+<script src="auth.js"></script>
+
+</body>
+</html>
