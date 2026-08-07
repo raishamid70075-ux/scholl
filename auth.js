@@ -29,6 +29,7 @@ let supabaseClient = null;
 if (SUPABASE_URL !== 'GANTI_DENGAN_URL_SUPABASE_KAMU') {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
+window.supabaseClient = supabaseClient;
 
 const authOverlay = document.getElementById('auth-overlay');
 const authNavBtn = document.getElementById('nav-auth-btn');
@@ -140,6 +141,28 @@ async function checkSession() {
     currentUsername = currentUser.user_metadata?.username || currentUser.email.split('@')[0];
     if (authNavBtn) authNavBtn.textContent = '🚪 Logout (' + currentUsername + ')';
 
+    // Muat profil: apakah user ini admin?
+    let isAdmin = false;
+    try {
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+      isAdmin = !!(profile && profile.is_admin);
+    } catch (e) {
+      console.error('Gagal memuat profil:', e.message);
+    }
+    window.currentUserIsAdmin = isAdmin;
+    if (isAdmin) {
+      const el = document.getElementById('nav-auth-btn');
+      if (el) el.textContent = '🛡️ Admin (' + currentUsername + ')';
+    }
+    const analyticsSection = document.getElementById('analytics');
+    if (analyticsSection) analyticsSection.style.display = isAdmin ? 'block' : 'none';
+    if (isAdmin && typeof loadTopSearches === 'function') loadTopSearches();
+    if (typeof loadComments === 'function') loadComments();
+
     if (commentGate) commentGate.style.display = 'none';
     if (commentFormEl) {
       commentFormEl.style.display = 'flex';
@@ -147,7 +170,10 @@ async function checkSession() {
       cNameInput.value = currentUsername;
     }
   } else {
+    window.currentUserIsAdmin = false;
     if (authNavBtn) authNavBtn.textContent = '🔑 Login';
+    const analyticsSection = document.getElementById('analytics');
+    if (analyticsSection) analyticsSection.style.display = 'none';
 
     if (commentGate) commentGate.style.display = 'block';
     if (commentFormEl) commentFormEl.style.display = 'none';

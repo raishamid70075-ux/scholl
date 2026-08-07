@@ -39,16 +39,16 @@
     position: relative;
   }
 
-  /* paper grain, subtle — not a glow blob */
+  /* paper grain, subtle — optimized for Chrome */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    opacity: .05;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-image: radial-gradient(var(--ink) 0.5px, transparent 0.5px);
+    background-size: 3px 3px;
+    opacity: 0.08;
   }
 
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 5; }
@@ -78,7 +78,7 @@
     transition: all 0.3s ease;
   }
   nav .wrap { 
-    height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; 
+    height: 68px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; 
     transition: height 0.3s ease;
   }
 
@@ -88,6 +88,7 @@
   .stamp-logo {
     flex-shrink: 0;
     width: 56px; height: 56px;
+    min-width: 56px; min-height: 56px;
     border: 2px dashed var(--pen-red);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -105,12 +106,10 @@
 
   .nav-links {
     display: flex;
+    flex: 0 0 auto;
     gap: 4px;
     list-style: none;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-  .nav-links::-webkit-scrollbar { display: none; }
   .nav-links a {
     display: block;
     position: relative;
@@ -126,11 +125,59 @@
     transition: border-color .15s ease, background .15s ease, transform .2s ease;
   }
   .nav-links a:hover, .nav-links a:focus-visible { transform: translateY(-1px); }
-  .nav-links li:nth-child(5n+1) a:hover, .nav-links li:nth-child(5n+1) a:focus-visible { border-color: var(--highlighter); }
-  .nav-links li:nth-child(5n+2) a:hover, .nav-links li:nth-child(5n+2) a:focus-visible { border-color: var(--sticky-pink); }
-  .nav-links li:nth-child(5n+3) a:hover, .nav-links li:nth-child(5n+3) a:focus-visible { border-color: var(--chalk-green); }
-  .nav-links li:nth-child(5n+4) a:hover, .nav-links li:nth-child(5n+4) a:focus-visible { border-color: var(--pen-red); }
-  .nav-links li:nth-child(5n+5) a:hover, .nav-links li:nth-child(5n+5) a:focus-visible { border-color: var(--cork); }
+  .nav-links > li:nth-child(5n+1) > a:hover, .nav-links > li:nth-child(5n+1) > a:focus-visible,
+  .nav-links > li:nth-child(5n+1) > button:hover, .nav-links > li:nth-child(5n+1) > button:focus-visible { border-color: var(--highlighter); }
+  .nav-links > li:nth-child(5n+2) > a:hover, .nav-links > li:nth-child(5n+2) > a:focus-visible,
+  .nav-links > li:nth-child(5n+2) > button:hover, .nav-links > li:nth-child(5n+2) > button:focus-visible { border-color: var(--sticky-pink); }
+  .nav-links > li:nth-child(5n+3) > a:hover, .nav-links > li:nth-child(5n+3) > a:focus-visible,
+  .nav-links > li:nth-child(5n+3) > button:hover, .nav-links > li:nth-child(5n+3) > button:focus-visible { border-color: var(--chalk-green); }
+  .nav-links > li:nth-child(5n+4) > a:hover, .nav-links > li:nth-child(5n+4) > a:focus-visible,
+  .nav-links > li:nth-child(5n+4) > button:hover, .nav-links > li:nth-child(5n+4) > button:focus-visible { border-color: var(--pen-red); }
+  .nav-links > li:nth-child(5n+5) > a:hover, .nav-links > li:nth-child(5n+5) > a:focus-visible,
+  .nav-links > li:nth-child(5n+5) > button:hover, .nav-links > li:nth-child(5n+5) > button:focus-visible { border-color: var(--cork); }
+
+  /* Dropdown menu — navbar kelompok (Kelas / Rutinitas / Kegiatan / Pesan) */
+  .has-dropdown { position: relative; }
+  .nav-dropdown-toggle {
+    display: flex; align-items: center; gap: 5px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--ink);
+    padding: 8px 12px;
+    border-bottom: 4px solid transparent;
+    transition: border-color .15s ease, transform .2s ease;
+  }
+  .nav-dropdown-toggle .caret { font-size: 9px; transition: transform .2s ease; }
+  .has-dropdown:hover .nav-dropdown-toggle, .has-dropdown.open .nav-dropdown-toggle,
+  .has-dropdown:hover .nav-dropdown-toggle .caret, .has-dropdown.open .nav-dropdown-toggle .caret { transform: translateY(-1px); }
+  .has-dropdown:hover .nav-dropdown-toggle .caret, .has-dropdown.open .nav-dropdown-toggle .caret { transform: rotate(180deg); }
+  .nav-dropdown {
+    position: absolute; top: 100%; left: 0;
+    min-width: 200px;
+    background: var(--paper-white);
+    border: 2px solid var(--ink);
+    box-shadow: var(--shadow-card);
+    padding: 6px 0;
+    list-style: none;
+    opacity: 0; visibility: hidden; transform: translateY(6px);
+    transition: opacity .18s ease, transform .18s ease, visibility .18s;
+    z-index: 120;
+  }
+  .has-dropdown:hover .nav-dropdown, .has-dropdown.open .nav-dropdown, .has-dropdown:focus-within .nav-dropdown {
+    opacity: 1; visibility: visible; transform: none;
+  }
+  .nav-dropdown a {
+    display: block;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+    padding: 9px 16px;
+    white-space: nowrap;
+    border: none;
+    border-left: 3px solid transparent;
+  }
+  .nav-dropdown a:hover { border-left-color: var(--pen-red); background: var(--paper); }
 
   .menu-toggle {
     display: none;
@@ -143,11 +190,12 @@
   @media (min-width: 761px) and (max-width: 1000px) {
     nav .wrap { gap: 8px; }
     .nav-links { gap: 1px; }
-    .nav-links a { font-size: 10px; padding: 6px 9px; }
+    .nav-links a, .nav-dropdown-toggle { font-size: 10px; padding: 6px 9px; }
     .stamp-logo { width: 48px; height: 48px; font-size: 7.5px; }
   }
 
   @media (max-width: 760px) {
+    nav .wrap { justify-content: space-between; }
     .menu-toggle { display: flex; }
     .nav-links {
       position: absolute; top: 68px; left: 0; width: 100%;
@@ -160,10 +208,132 @@
     nav.scrolled .nav-links {
       top: 52px;
     }
-    .nav-links.active { max-height: 600px; overflow-y: auto; }
+    .nav-links.active { max-height: 80vh; overflow-y: auto; }
     .nav-links li { width: 100%; }
-    .nav-links a { padding: 14px 24px; border-bottom: 1px solid var(--paper-line); }
+    .nav-links > li > a, .nav-dropdown-toggle { padding: 14px 24px; border-bottom: 1px solid var(--paper-line); }
+    .has-dropdown { position: static; }
+    .nav-dropdown-toggle { width: 100%; justify-content: space-between; border-bottom: 1px solid var(--paper-line); }
+    .nav-dropdown {
+      position: static; width: 100%;
+      background: transparent;
+      border: none; box-shadow: none;
+      padding: 0;
+      opacity: 1; visibility: visible; transform: none;
+      max-height: 0; overflow: hidden;
+      transition: max-height .25s ease;
+    }
+    .has-dropdown.open .nav-dropdown { max-height: 400px; }
+    .nav-dropdown a { padding: 11px 40px; border-bottom: 1px dashed var(--paper-line); }
+    .nav-dropdown a:hover { border-left-color: transparent; background: var(--paper); }
   }
+
+  .nav-actions {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .nav-search-btn {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .2s ease, transform .15s ease;
+  }
+  .nav-search-btn:hover, .nav-search-btn:focus-visible {
+    background: rgba(28,37,65,.08);
+    transform: translateY(-1px);
+  }
+
+  /* =========================================================
+     SEARCH OVERLAY — panel kertas cari sesuatu yang spesifik.
+  ========================================================= */
+  .search-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(28,37,65,.55);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 12vh 20px 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .search-overlay.active { opacity: 1; pointer-events: auto; }
+  .search-panel {
+    width: 100%; max-width: 560px;
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    padding: 22px;
+    position: relative;
+    transform: translateY(-8px);
+    transition: transform .2s ease;
+  }
+  .search-overlay.active .search-panel { transform: none; }
+  .search-title {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 12px;
+  }
+  .search-box {
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 2px dashed var(--ink); padding-bottom: 8px;
+  }
+  .search-box svg { flex-shrink: 0; color: var(--ink-soft); }
+  .search-box input {
+    flex: 1; min-width: 0;
+    border: none; background: transparent;
+    font-family: 'Work Sans', sans-serif; font-size: 16px; color: var(--ink);
+    outline: none;
+  }
+  .search-box input::placeholder { color: rgba(28,37,65,.5); }
+  .search-hint {
+    font-family: 'Patrick Hand', cursive; font-size: 11px; color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  .search-results { margin-top: 14px; max-height: 46vh; overflow-y: auto; }
+  .search-empty { font-size: 13px; color: var(--ink-soft); font-style: italic; }
+  .search-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 8px; cursor: pointer; border-radius: 4px;
+    border-bottom: 1px dashed var(--paper-line);
+    font-family: 'Work Sans', sans-serif; font-size: 14px; color: var(--ink);
+    transition: background .15s ease;
+  }
+  .search-item:hover, .search-item.active { background: var(--paper); }
+  .search-item mark { background: var(--highlighter); color: var(--ink); font-weight: 600; padding: 0 2px; }
+  .search-type {
+    flex-shrink: 0; font-family: 'Patrick Hand', cursive;
+    font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--paper-white); background: var(--chalk-green);
+    padding: 2px 8px;
+  }
+  .search-item:nth-child(5n+2) .search-type { background: var(--sticky-pink); }
+  .search-item:nth-child(5n+3) .search-type { background: var(--ink-soft); }
+  .search-item:nth-child(5n+4) .search-type { background: var(--pen-red); }
+  .search-item:nth-child(5n+5) .search-type { background: var(--cork-dark); }
+
+  /* =========================================================
+     TOP PENCARIAN (admin) — ranking kata paling sering dicari.
+  ========================================================= */
+  .top-searches { display: flex; flex-direction: column; gap: 10px; max-width: 620px; }
+  .top-search-row {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--paper-white);
+    box-shadow: var(--shadow-card);
+    padding: 12px 16px;
+  }
+  .top-search-row:nth-child(odd) { transform: rotate(-.5deg); }
+  .top-search-row:nth-child(even) { transform: rotate(.4deg); }
+  .top-search-rank {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--ink); color: var(--paper-white);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Patrick Hand', cursive; font-weight: 700; font-size: 13px;
+  }
+  .top-search-query { flex: 1; font-weight: 600; font-size: 14.5px; }
+  .top-search-count { font-family: 'Caveat', cursive; font-weight: 700; font-size: 18px; color: var(--pen-red); }
+  .top-search-bar-wrap { flex: 1; min-width: 80px; height: 8px; background: var(--paper); border-radius: 999px; overflow: hidden; }
+  .top-search-bar { height: 100%; background: var(--highlighter); border-radius: 999px; }
 
   /* =========================================================
      SECTION TAB — label kertas robek, bukan angka 01/02/03.
@@ -694,6 +864,16 @@
   .comment-date { font-size: 10px; opacity: .7; display: block; margin-top: 8px; }
   .comment-body { font-family: 'Caveat', cursive; font-weight: 600; font-size: 18px; line-height: 1.35; }
   .empty-note { font-size: 13px; color: var(--ink-soft); }
+  .comment-delete {
+    position: absolute; top: 6px; right: 6px;
+    width: 22px; height: 22px; line-height: 20px;
+    border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(28,37,65,.18); color: var(--ink);
+    font-size: 14px; font-weight: 700;
+    transition: background .2s ease, color .2s ease;
+    z-index: 2;
+  }
+  .comment-delete:hover { background: var(--pen-red); color: var(--paper-white); }
 
   /* =========================================================
      11. CONTACT & FOOTER
@@ -714,7 +894,7 @@
   footer .fine-print { font-family: 'Patrick Hand', cursive; font-size: 11px; color: var(--ink-soft); }
 
   /* gentle reveal-on-scroll — paper settling into place */
-  .reveal { opacity: 0; transform: translateY(14px) rotate(0deg); transition: opacity .5s ease, transform .5s ease; }
+  .reveal { opacity: 0; transform: translateY(14px) rotate(0deg); transition: opacity .5s ease, transform .5s ease; will-change: opacity, transform; }
   .reveal.in-view { opacity: 1; transform: none; }
 
   /* subtle hover micro-interactions — "kertas terangkat" */
@@ -736,22 +916,47 @@
 <nav>
   <div class="wrap">
     <div class="stamp-logo">SMA<br>XII·IPA1</div>
-    <button class="menu-toggle" id="mobile-menu" aria-label="Buka menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
     <ul class="nav-links" id="nav-links">
-      <li><a href="#cerita">Cerita</a></li>
-      <li><a href="#struktur">Struktur</a></li>
-      <li><a href="#walikelas">Wali Kelas</a></li>
-      <li><a href="#profil">Siswa</a></li>
-      <li><a href="#jadwal">Jadwal</a></li>
-      <li><a href="#denah">Denah</a></li>
-      <li><a href="#dokumentasi">Dokumentasi</a></li>
-      <li><a href="#prestasi">Prestasi</a></li>
-      <li><a href="#komentar">Komentar</a></li>
-      <li><a href="#contact">Kontak</a></li>
+      <li class="has-dropdown">
+        <button class="nav-dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">Kelas <span class="caret">▾</span></button>
+        <ul class="nav-dropdown">
+          <li><a href="#cerita">Cerita</a></li>
+          <li><a href="#struktur">Struktur</a></li>
+          <li><a href="#walikelas">Wali Kelas</a></li>
+          <li><a href="#profil">Profil Siswa</a></li>
+        </ul>
+      </li>
+      <li class="has-dropdown">
+        <button class="nav-dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">Rutinitas <span class="caret">▾</span></button>
+        <ul class="nav-dropdown">
+          <li><a href="#jadwal">Jadwal Pelajaran</a></li>
+          <li><a href="#denah">Denah Tempat Duduk</a></li>
+        </ul>
+      </li>
+      <li class="has-dropdown">
+        <button class="nav-dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">Kegiatan <span class="caret">▾</span></button>
+        <ul class="nav-dropdown">
+          <li><a href="#dokumentasi">Dokumentasi</a></li>
+          <li><a href="#prestasi">Prestasi</a></li>
+        </ul>
+      </li>
+      <li class="has-dropdown">
+        <button class="nav-dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">Pesan <span class="caret">▾</span></button>
+        <ul class="nav-dropdown">
+          <li><a href="#komentar">Komentar</a></li>
+          <li><a href="#contact">Kontak</a></li>
+        </ul>
+      </li>
       <li id="nav-auth-item"><a href="#" id="nav-auth-btn">🔑 Login</a></li>
     </ul>
+    <div class="nav-actions">
+      <button class="nav-search-btn" id="nav-search-btn" aria-label="Cari di mading" title="Cari (Ctrl+K)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+      <button class="menu-toggle" id="mobile-menu" aria-label="Buka menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </nav>
 
@@ -1106,6 +1311,16 @@
   </div>
 </section>
 
+<!-- 10b. TOP PENCARIAN (hanya admin) -->
+<section class="section" id="analytics" style="display:none;">
+  <div class="wrap">
+    <div class="section-tab">Statistik</div>
+    <h2 class="section-title">Top Pencarian</h2>
+    <div class="section-sub">Kata yang paling sering dicari pengunjung (khusus admin).</div>
+    <div class="top-searches" id="top-searches-list" style="margin-top:32px;"></div>
+  </div>
+</section>
+
 <!-- 11. CONTACT -->
 <section class="section" id="contact" style="border-bottom:none;">
   <div class="wrap">
@@ -1127,60 +1342,123 @@
   </div>
 </footer>
 
+<!-- SEARCH OVERLAY -->
+<div id="search-overlay" class="search-overlay">
+  <div class="search-panel">
+    <button id="search-close" class="auth-close" aria-label="Tutup pencarian">&times;</button>
+    <div class="search-title">Cari di Mading</div>
+    <div class="search-box">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="search-input" placeholder="Cari seksi, siswa, mapel, hari..." autocomplete="off" aria-label="Kata kunci pencarian">
+    </div>
+    <div class="search-hint">Tekan ↑ ↓ untuk pilih, Enter untuk buka, Esc untuk tutup.</div>
+    <div class="search-results" id="search-results">
+      <div class="search-empty">Ketik untuk mulai mencari...</div>
+    </div>
+  </div>
+</div>
+
 <script>
   // 1. Kartu pelajar: buka/tutup detail
   function toggleDetails(element) {
     element.closest('.id-card').classList.toggle('active');
   }
 
-  // 2. Komentar — disimpan di memori selama sesi (bukan localStorage,
-  //    supaya tetap berjalan aman di dalam tampilan artifact).
-  let comments = [
-    { name: 'Wali Kelas', msg: 'Bangga sama kalian semua, terus kompak sampai lulus ya!', date: '1 Agu 2026' },
-    { name: 'Alumni 2024', msg: 'Enjoy masa-masa kelas 12, cepat banget lho waktunya nanti.', date: '3 Agu 2026' }
-  ];
-
+  // 2. Komentar — disimpan PERMANEN di Supabase (tabel `comments`),
+  //    jadi semua pengguna bisa melihat komentar yang ditambahkan.
   const noteColors = ['note-yellow', 'note-pink', 'note-green', 'note-white'];
   const form = document.getElementById('commentForm');
   const list = document.getElementById('commentList');
 
   function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  function renderComments() {
-    if (comments.length === 0) {
+  function formatDate(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    return isNaN(d) ? '' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function renderComments(rows) {
+    if (!rows || rows.length === 0) {
       list.innerHTML = '<div class="empty-note">Belum ada komentar. Jadi yang pertama nempel!</div>';
       return;
     }
-    list.innerHTML = comments.map((c, i) => {
+    list.innerHTML = rows.map((c, i) => {
       const rotation = [-3, 2, -1.5, 3, -2.5][i % 5];
       const color = noteColors[i % noteColors.length];
+      const delBtn = window.currentUserIsAdmin
+        ? `<button class="comment-delete" data-id="${c.id}" title="Hapus komentar" aria-label="Hapus komentar">&times;</button>`
+        : '';
       return `
         <div class="sticky-note ${color}" style="transform: rotate(${rotation}deg);">
+          ${delBtn}
           <div class="comment-author">${escapeHtml(c.name)}</div>
-          <div class="comment-body">${escapeHtml(c.msg)}</div>
-          <span class="comment-date">${c.date}</span>
+          <div class="comment-body">${escapeHtml(c.message)}</div>
+          <span class="comment-date">${formatDate(c.created_at)}</span>
         </div>`;
     }).join('');
   }
 
-  form.addEventListener('submit', (e) => {
+  async function loadComments() {
+    if (!window.supabaseClient) return;
+    const { data, error } = await window.supabaseClient
+      .from('comments')
+      .select('id, name, message, created_at')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Gagal memuat komentar:', error.message);
+      return;
+    }
+    renderComments(data || []);
+  }
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('cName').value.trim();
     const msg = document.getElementById('cMsg').value.trim();
     if (!name || !msg) return;
 
-    comments.unshift({
-      name, msg,
-      date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-    });
+    if (!window.supabaseClient) {
+      alert('Supabase belum dikonfigurasi. Komentar tidak bisa disimpan.');
+      return;
+    }
+
+    const { error } = await window.supabaseClient
+      .from('comments')
+      .insert({ name, message: msg });
+
+    if (error) {
+      alert('Gagal menyimpan komentar: ' + error.message);
+      return;
+    }
 
     form.reset();
-    renderComments();
+    loadComments();
   });
 
-  renderComments();
+  // Admin: hapus komentar orang lain secara permanen
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.comment-delete');
+    if (!btn) return;
+    if (!window.currentUserIsAdmin || !window.supabaseClient) return;
+    if (!confirm('Hapus komentar ini secara permanen?')) return;
+
+    const { error } = await window.supabaseClient
+      .from('comments')
+      .delete()
+      .eq('id', btn.dataset.id);
+
+    if (error) {
+      alert('Gagal menghapus komentar: ' + error.message);
+      return;
+    }
+    loadComments();
+  });
+
+  // Muat komentar setelah semua script (termasuk auth.js) selesai dimuat.
+  window.addEventListener('load', loadComments);
 
   // 3. Menu hamburger mobile
   const mobileMenu = document.getElementById('mobile-menu');
@@ -1191,6 +1469,33 @@
   });
   navLinks.querySelectorAll('a').forEach(item => {
     item.addEventListener('click', () => navLinks.classList.remove('active'));
+  });
+
+  // Dropdown navbar: buka/tutup grup (Kelas / Rutinitas / Kegiatan / Pesan)
+  function setDropdown(li, open) {
+    li.classList.toggle('open', open);
+    const t = li.querySelector('.nav-dropdown-toggle');
+    if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  document.querySelectorAll('.nav-dropdown-toggle').forEach(toggle => {
+    toggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      const li = toggle.closest('.has-dropdown');
+      const wasOpen = li.classList.contains('open');
+      document.querySelectorAll('.has-dropdown.open').forEach(o => setDropdown(o, false));
+      if (!wasOpen) setDropdown(li, true);
+    });
+  });
+  document.querySelectorAll('.nav-dropdown a').forEach(a => {
+    a.addEventListener('click', () => {
+      const li = a.closest('.has-dropdown');
+      if (li) setDropdown(li, false);
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.has-dropdown')) {
+      document.querySelectorAll('.has-dropdown.open').forEach(o => setDropdown(o, false));
+    }
   });
 
   // 4. Reveal-on-scroll — kertas "menempel" saat masuk layar
@@ -1217,6 +1522,191 @@
       navbar.classList.remove('scrolled');
     }
   });
+
+  // 6. SEARCH — cari seksi/siswa/mapel/hari + statistik pencarian ke Supabase
+  const searchOverlay = document.getElementById('search-overlay');
+  const searchBtn = document.getElementById('nav-search-btn');
+  const searchClose = document.getElementById('search-close');
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  let searchActiveIndex = -1;
+  let searchCurrentResults = [];
+
+  const searchIndex = [
+    { type: 'Seksi', label: 'Cerita Kelas', section: '#cerita' },
+    { type: 'Seksi', label: 'Struktur Kelas', section: '#struktur' },
+    { type: 'Seksi', label: 'Wali Kelas', section: '#walikelas' },
+    { type: 'Seksi', label: 'Profil Siswa', section: '#profil' },
+    { type: 'Seksi', label: 'Jadwal Pelajaran', section: '#jadwal' },
+    { type: 'Seksi', label: 'Denah Tempat Duduk', section: '#denah' },
+    { type: 'Seksi', label: 'Dokumentasi', section: '#dokumentasi' },
+    { type: 'Seksi', label: 'Prestasi', section: '#prestasi' },
+    { type: 'Seksi', label: 'Komentar', section: '#komentar' },
+    { type: 'Seksi', label: 'Kontak', section: '#contact' },
+    { type: 'Mapel', label: 'Matematika', section: '#jadwal' },
+    { type: 'Mapel', label: 'Fisika', section: '#jadwal' },
+    { type: 'Mapel', label: 'Kimia', section: '#jadwal' },
+    { type: 'Mapel', label: 'Biologi', section: '#jadwal' },
+    { type: 'Mapel', label: 'Bahasa Indonesia', section: '#jadwal' },
+    { type: 'Mapel', label: 'Bahasa Inggris', section: '#jadwal' },
+    { type: 'Mapel', label: 'Pendidikan Agama', section: '#jadwal' },
+    { type: 'Mapel', label: 'Sejarah', section: '#jadwal' },
+    { type: 'Mapel', label: 'Olahraga', section: '#jadwal' },
+    { type: 'Mapel', label: 'Seni Budaya', section: '#jadwal' },
+    { type: 'Mapel', label: 'PPKn', section: '#jadwal' },
+    { type: 'Mapel', label: 'Prakarya', section: '#jadwal' },
+    { type: 'Hari', label: 'Senin', section: '#jadwal' },
+    { type: 'Hari', label: 'Selasa', section: '#jadwal' },
+    { type: 'Hari', label: 'Rabu', section: '#jadwal' },
+    { type: 'Hari', label: 'Kamis', section: '#jadwal' },
+    { type: 'Hari', label: 'Jumat', section: '#jadwal' }
+  ];
+
+  // Siswa & pengurus diambil dari DOM supaya otomatis sinkron dengan data halaman
+  document.querySelectorAll('#profil .id-card-name').forEach(el => {
+    searchIndex.push({ type: 'Siswa', label: el.textContent.trim(), section: '#profil' });
+  });
+  document.querySelectorAll('#struktur .id-name').forEach(el => {
+    searchIndex.push({ type: 'Pengurus', label: el.textContent.trim(), section: '#struktur' });
+  });
+
+  function normSearch(s) { return String(s).toLowerCase(); }
+
+  function filterSearch(q) {
+    if (!q) return [];
+    const nq = normSearch(q);
+    return searchIndex
+      .map(item => {
+        const nl = normSearch(item.label);
+        let score = -1;
+        if (nl.startsWith(nq)) score = 3;
+        else if (nl.includes(nq)) score = 2;
+        else if (normSearch(item.type).startsWith(nq)) score = 1;
+        return { item, score };
+      })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+  }
+
+  function highlightMatch(label, q) {
+    const idx = normSearch(label).indexOf(normSearch(q));
+    if (idx === -1) return escapeHtml(label);
+    return escapeHtml(label.slice(0, idx)) + '<mark>' + escapeHtml(label.slice(idx, idx + q.length)) + '</mark>' + escapeHtml(label.slice(idx + q.length));
+  }
+
+  function renderSearchResults(results) {
+    searchCurrentResults = results;
+    searchActiveIndex = results.length ? 0 : -1;
+    if (!results.length) {
+      searchResults.innerHTML = '<div class="search-empty">Tidak ada yang cocok. Coba kata lain.</div>';
+      return;
+    }
+    const q = searchInput.value.trim();
+    searchResults.innerHTML = results.map((r, i) => `
+      <div class="search-item${i === searchActiveIndex ? ' active' : ''}" data-index="${i}" role="button" tabindex="-1">
+        <span class="search-type">${escapeHtml(r.item.type)}</span>
+        <span>${highlightMatch(r.item.label, q)}</span>
+      </div>`).join('');
+    searchResults.querySelectorAll('.search-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const res = searchCurrentResults[+el.dataset.index];
+        if (res) { logSearch(res.item.label, 1); goToSection(res.item); }
+      });
+    });
+  }
+
+  function goToSection(item) {
+    closeSearch();
+    const el = document.querySelector(item.section);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function logSearch(query, resultCount) {
+    if (!window.supabaseClient) return;
+    try {
+      await window.supabaseClient.from('searches').insert({ query: query.trim().toLowerCase(), results: resultCount });
+    } catch (e) {
+      console.error('Gagal log pencarian:', e.message);
+    }
+  }
+
+  function openSearch() {
+    searchOverlay.classList.add('active');
+    setTimeout(() => searchInput.focus(), 60);
+  }
+  function closeSearch() {
+    searchOverlay.classList.remove('active');
+    searchInput.value = '';
+    renderSearchResults([]);
+  }
+
+  searchBtn.addEventListener('click', (e) => { e.preventDefault(); openSearch(); });
+  searchClose.addEventListener('click', closeSearch);
+  searchOverlay.addEventListener('click', (e) => { if (e.target === searchOverlay) closeSearch(); });
+  searchInput.addEventListener('input', () => renderSearchResults(filterSearch(searchInput.value.trim())));
+
+  searchInput.addEventListener('keydown', (e) => {
+    const total = searchCurrentResults.length;
+    if (e.key === 'Escape') { closeSearch(); return; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (total) { searchActiveIndex = (searchActiveIndex + 1) % total; renderSearchResults(searchCurrentResults); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (total) { searchActiveIndex = (searchActiveIndex - 1 + total) % total; renderSearchResults(searchCurrentResults); }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const q = searchInput.value.trim();
+      if (!q) return;
+      const target = searchCurrentResults[searchActiveIndex] || searchCurrentResults[0];
+      logSearch(target ? target.item.label : q, target ? searchCurrentResults.length : 0);
+      if (target) goToSection(target.item);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      openSearch();
+    }
+  });
+
+  // 7. TOP PENCARIAN (admin) — ranking kata paling sering dicari
+  async function loadTopSearches() {
+    const listEl = document.getElementById('top-searches-list');
+    if (!listEl) return;
+    if (!window.supabaseClient) {
+      listEl.innerHTML = '<div class="empty-note">Supabase belum dikonfigurasi.</div>';
+      return;
+    }
+    const { data, error } = await window.supabaseClient
+      .from('searches')
+      .select('query')
+      .limit(10000);
+    if (error) {
+      listEl.innerHTML = '<div class="empty-note">Gagal memuat statistik: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    const counts = {};
+    data.forEach(r => {
+      const q = (r.query || '').trim().toLowerCase();
+      if (q) counts[q] = (counts[q] || 0) + 1;
+    });
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    if (!top.length) {
+      listEl.innerHTML = '<div class="empty-note">Belum ada data pencarian.</div>';
+      return;
+    }
+    const maxCount = top[0][1];
+    listEl.innerHTML = top.map((t, i) => `
+      <div class="top-search-row">
+        <div class="top-search-rank">${i + 1}</div>
+        <div class="top-search-query">${escapeHtml(t[0])}</div>
+        <div class="top-search-bar-wrap"><div class="top-search-bar" style="width:${Math.max(8, Math.round(t[1] / maxCount * 100))}%"></div></div>
+        <div class="top-search-count">${t[1]}×</div>
+      </div>`).join('');
+  }
 
 </script>
 
