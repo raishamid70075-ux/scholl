@@ -7,13 +7,12 @@ document.body.insertAdjacentHTML('beforeend', `
       <button class="auth-tab active" id="tab-login">Masuk</button>
       <button class="auth-tab" id="tab-signup">Daftar</button>
     </div>
-    <form id="authForm" class="auth-form">
+    <form id="authForm" class="auth-form" autocomplete="off">
       <div id="signup-fields">
         <input type="text" id="auth-username" placeholder="Username / Nama Panggilan" style="width:100%;">
       </div>
       <input type="email" id="auth-email" placeholder="Alamat Email" required style="width:100%;">
-      <input type="password" id="auth-password" placeholder="Password (min 6 kar)" required style="width:100%;" minlength="6">
-      
+      <input type="password" id="auth-password" placeholder="Password (min 6 kar)" required style="width:100%;" minlength="6" autocomplete="new-password">
       <button type="submit" id="auth-submit-btn" class="btn-submit" style="width: 100%; margin-top: 8px;">Masuk</button>
       <div id="auth-msg" class="auth-msg"></div>
     </form>
@@ -26,8 +25,12 @@ const SUPABASE_URL = 'https://mguyazbqddhvrnvbjsdl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndXlhemJxZGRodnJudmJqc2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjA2NjksImV4cCI6MjEwMTU5NjY2OX0.Lv4dB7lelo3PmYyxvsDrfTgYONCYDG1HaM0prVBuEc8';
 
 let supabaseClient = null;
-if (SUPABASE_URL !== 'GANTI_DENGAN_URL_SUPABASE_KAMU') {
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (SUPABASE_URL !== 'GANTI_DENGAN_URL_SUPABASE_KAMU' && typeof window.supabase !== 'undefined') {
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (err) {
+    console.error('Gagal inisialisasi Supabase:', err.message);
+  }
 }
 window.supabaseClient = supabaseClient;
 
@@ -94,12 +97,14 @@ if (authFormEl) {
   authFormEl.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!supabaseClient) {
-      authMsg.textContent = 'Error: Supabase Key belum diganti di file auth.js!';
+      authMsg.textContent = (typeof window.supabase === 'undefined')
+        ? 'Supabase SDK gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.'
+        : 'Error: Supabase Key belum diganti di file auth.js!';
       authMsg.style.color = 'var(--pen-red)';
       return;
     }
 
-    const email = document.getElementById('auth-email').value;
+    const email = document.getElementById('auth-email').value.trim().toLowerCase();
     const password = document.getElementById('auth-password').value;
 
     authMsg.textContent = 'Memproses...';
@@ -115,18 +120,24 @@ if (authFormEl) {
         checkSession();
       }
     } else {
-      const username = document.getElementById('auth-username').value;
+      const username = document.getElementById('auth-username').value.trim();
+      if (!username) {
+        authMsg.textContent = 'Lengkapi username.';
+        authMsg.style.color = 'var(--pen-red)';
+        return;
+      }
+      authMsg.textContent = 'Membuat akun...';
       const { data, error } = await supabaseClient.auth.signUp({
-        email, password, options: { data: { username } }
+        email,
+        password,
+        options: { data: { username } }
       });
-
       if (error) {
         authMsg.textContent = error.message;
         authMsg.style.color = 'var(--pen-red)';
       } else {
-        authMsg.textContent = 'Berhasil daftar! Silakan masuk.';
-        authMsg.style.color = 'var(--chalk-green)';
-        setTimeout(() => toggleAuthMode(true), 1500);
+        closeAuthModal();
+        checkSession();
       }
     }
   });
