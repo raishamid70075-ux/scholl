@@ -28,15 +28,23 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 
   body {
     background: var(--paper);
     color: var(--ink);
     font-family: 'Work Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
     position: relative;
+    font-size: 1rem;
   }
 
   /* paper grain, subtle — optimized for Chrome */
@@ -51,7 +59,7 @@
     opacity: 0.08;
   }
 
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 5; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 5; }
   section, header.hero { scroll-margin-top: 84px; }
 
   img, svg { display: block; max-width: 100%; }
@@ -405,7 +413,7 @@
     font-family: 'Archivo Black', sans-serif;
     text-transform: uppercase;
     color: var(--paper-white);
-    font-size: clamp(46px, 9vw, 92px);
+    font-size: clamp(52px, 9.5vw, 108px);
     line-height: .92;
     letter-spacing: -0.01em;
   }
@@ -919,37 +927,47 @@
 
   /* =========================================================
      OPTIMASI DESKTOP (Chrome/Windows) — konten lebih besar
+     Memastikan tampilan Chrome = Edge
   ========================================================= */
-  @media (min-width: 1280px) {
-    .wrap { max-width: 1280px; }
-  }
-  @media (min-width: 1700px) {
-    .wrap { max-width: 1440px; }
+  @media (min-width: 1024px) {
+    html { font-size: 17px; }
+    .wrap { max-width: 1200px; }
+    .nav-links a, .nav-dropdown-toggle { font-size: 12px; }
+    .hero-tag { font-size: 13px; }
+    .id-tag-row { font-size: 14.5px; }
+    .id-tag-label { font-size: 12px; }
+    .section-sub { font-size: 15px; }
+    .story-card p { font-size: 17px; }
+    .note-title { font-size: 14.5px; }
+    .note-body { font-size: 14.5px; }
+    .teacher-name { font-size: 24px; }
+    .teacher-quote { font-size: 24px; }
+    .id-card-name { font-size: 17px; }
+    .id-card-nickname { font-size: 19px; }
+    table.schedule-table { font-size: 15px; }
+    .doc-title { font-size: 24px; }
+    .doc-desc { font-size: 14px; }
+    .comment-body { font-size: 20px; }
+    .medal-title { font-size: 16px; }
+    .contact-val { font-size: 16px; }
   }
 
   @media (min-width: 1280px) {
-    .nav-links a, .nav-dropdown-toggle { font-size: 12px; }
-    .hero-tag { font-size: 12px; }
-    .id-tag-row { font-size: 14px; }
-    .id-tag-label { font-size: 11px; }
-    .section-sub { font-size: 14px; }
-    .story-card p { font-size: 16.5px; }
-    .note-title { font-size: 14px; }
-    .note-body { font-size: 14px; }
-    .teacher-role { font-size: 12px; }
-    .teacher-name { font-size: 23px; }
-    .teacher-quote { font-size: 23px; }
-    .id-card-name { font-size: 17px; }
-    .id-card-nickname { font-size: 19px; }
-    .id-card-role { font-size: 11px; }
-    table.schedule-table { font-size: 14.5px; }
-    .doc-title { font-size: 23px; }
-    .doc-desc { font-size: 13.5px; }
-    .comment-author { font-size: 12px; }
-    .comment-body { font-size: 19px; }
-    .medal-title { font-size: 15.5px; }
-    .contact-val { font-size: 15px; }
-    .empty-note { font-size: 14px; }
+    html { font-size: 18px; }
+    .wrap { max-width: 1360px; }
+    .nav-links a, .nav-dropdown-toggle { font-size: 12.5px; }
+    .section-sub { font-size: 15.5px; }
+    .story-card p { font-size: 17.5px; }
+  }
+
+  @media (min-width: 1600px) {
+    html { font-size: 19px; }
+    .wrap { max-width: 1520px; }
+  }
+
+  @media (min-width: 1700px) {
+    html { font-size: 20px; }
+    .wrap { max-width: 1640px; }
   }
 </style>
 </head>
