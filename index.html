@@ -45,7 +45,10 @@
     overflow-x: hidden;
     position: relative;
     font-size: 1rem;
-    zoom: 1.45;
+  }
+  /* Zoom desktop hanya — di Android/mobile membuat layout ngaco parah. */
+  @media (min-width: 1024px) {
+    body { zoom: 1.45; }
   }
 
   /* paper grain, subtle — optimized for Chrome */

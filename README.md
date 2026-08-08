@@ -108,6 +108,11 @@ create policy "Login boleh tambah komentar" on public.comments
     for select using (public.is_admin());
   ```
 
+### 2026-08-07 — Fix Tampilan Android Ngaco (zoom bocor ke mobile)
+- `body { zoom: 1.45 }` (optimasi desktop) sebelumnya diterapkan **global** → Android di-zoom 145% & hancur.
+- Fix: `zoom` hanya berlaku di `@media (min-width: 1024px)` → mobile/tablet normal 100%, desktop tetap besar.
+- Verifikasi (Chrome headless, emulasi 360/412/768/1366): tidak ada overflow horizontal, hamburger bekerja, desktop tetap zoom 1.45.
+
 ## Status
 
 - [x] Struktur halaman lengkap (11 seksi)
