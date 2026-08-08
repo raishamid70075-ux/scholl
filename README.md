@@ -113,6 +113,11 @@ create policy "Login boleh tambah komentar" on public.comments
 - Fix: `zoom` hanya berlaku di `@media (min-width: 1024px)` → mobile/tablet normal 100%, desktop tetap besar.
 - Verifikasi (Chrome headless, emulasi 360/412/768/1366): tidak ada overflow horizontal, hamburger bekerja, desktop tetap zoom 1.45.
 
+### 2026-08-07 — Fix Navbar Android saat Scroll (border menu bocor)
+- Saat scroll navbar menyusut 71→61px, tapi `.nav-links` masih `top:44px` → border bawahnya (3px) dirender melayang di tengah navbar = tampak ngaco.
+- Fix: `nav.scrolled .nav-links { top: 58px }` → border rapi di bawah navbar, dropdown buka pas di bawahnya.
+- Verifikasi CDP + analisis piksel: garis nyasar hilang, dropdown 11 link tanpa overlap.
+
 ## Status
 
 - [x] Struktur halaman lengkap (11 seksi)
